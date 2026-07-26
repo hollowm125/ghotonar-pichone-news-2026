@@ -40,5 +40,16 @@ app.get('/api/admin/comments',adminOnly,(req,res)=>res.json([...db.comments].sor
 app.patch('/api/admin/comments/:id',adminOnly,(req,res)=>{const c=db.comments.find(c=>c.id===Number(req.params.id));if(c)c.status=req.body.status;save();res.json({ok:true})});
 app.get('/api/admin/ads',adminOnly,(req,res)=>res.json([...db.ads].sort((a,b)=>b.id-a.id).map(a=>({...a,advertiser:(db.users.find(u=>u.id===a.advertiser_id)||{}).name||'',email:(db.users.find(u=>u.id===a.advertiser_id)||{}).email||''}))));
 app.patch('/api/admin/ads/:id',adminOnly,(req,res)=>{const a=db.ads.find(a=>a.id===Number(req.params.id));if(a)a.status=req.body.status;save();res.json({ok:true})});
+app.get('/news.html',(req,res)=>{
+const n=db.news.find(n=>n.id===Number(req.query.id)&&n.status==='published');
+if(!n)return res.sendFile(path.join(__dirname,'public','news.html'));
+const title=String(n.title||'ঘটনার পিছনে').replace(/"/g,'&quot;');
+const description=String(n.excerpt||n.content||'').replace(/"/g,'&quot;').slice(0,200);
+const image=n.image||'';
+const url='https://ghotonar-pichone-news.onrender.com/news.html?id='+n.id;
+let html=fs.readFileSync(path.join(__dirname,'public','news.html'),'utf8');
+html=html.replace('</head>','<meta property="og:type" content="article"><meta property="og:title" content="'+title+'"><meta property="og:description" content="'+description+'"><meta property="og:image" content="'+image+'"><meta property="og:url" content="'+url+'"><meta property="og:site_name" content="ঘটনার পিছনে"></head>');
+res.send(html);
+});
 app.get('*',(req,res)=>res.sendFile(path.join(__dirname,'public','index.html')));
 app.listen(PORT,()=>console.log('ঘটনার পিছনে চলছে: http://localhost:'+PORT));
