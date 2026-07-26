@@ -3,4 +3,12 @@
 '<h1>'+n.title+'</h1>'+
 (n.image ? '<img src="'+n.image+'" alt="'+n.title+'" style="width:100%;max-height:500px;object-fit:cover;border-radius:12px;margin:15px 0;">' : '')+
 '<p>'+(n.excerpt||'')+'</p><hr>'+
-'<div style="font-size:19px;line-height:1.9">'+n.content.replace(/\n/g,'<br>')+'</div>';loadComments()})();async function loadComments(){let c=await api('/api/news/'+id+'/comments');document.querySelector('#comments').innerHTML=c.map(x=>'<div class="card" style="padding:14px;margin:10px 0"><b>'+x.name+'</b><p>'+x.text+'</p></div>').join('')}document.querySelector('#comment').onsubmit=async e=>{e.preventDefault();try{await api('/api/news/'+id+'/comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});alert('মন্তব্য অনুমোদনের জন্য পাঠানো হয়েছে');e.target.reset()}catch(x){alert(x.message)}};</script></body></html>
+'<div style="font-size:19px;line-height:1.9">'+n.content.replace(/\n/g,'<br>')+'</div>';loadComments()})();async function loadComments(){let c=await api('/api/news/'+id+'/comments');document.querySelector('#comments').innerHTML=c.map(x=>'<div class="card" style="padding:14px;margin:10px 0"><b>'+x.name+'</b><p>'+x.text+'</p></div>').join('')}document.querySelector('#comment').onsubmit=async e=>{e.preventDefault();try{await api('/api/news/'+id+'/comments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});alert('মন্তব্য অনুমোদনের জন্য পাঠানো হয়েছে');e.target.reset()}catch(x){alert(x.message)}};</script><script>
+function copyNewsLink(){
+  navigator.clipboard.writeText(window.location.href).then(()=>{
+    alert("নিউজের লিংক কপি হয়েছে! ✅");
+  });
+}
+</script>
+<button onclick="copyNewsLink()" style="position:fixed;bottom:20px;right:20px;padding:12px 18px;border:0;border-radius:8px;background:#111;color:#fff;font-size:16px;z-index:9999;">🔗 লিংক কপি করুন</button>
+</body></html>
