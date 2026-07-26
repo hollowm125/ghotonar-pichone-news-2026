@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel - ঘটনার পিছনে</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f1f5f9;
+  color:#111827;
+}
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:15px;
+}
+.card{
+  background:white;
+  padding:20px;
+  margin:15px 0;
+  border-radius:12px;
+  box-shadow:0 3px 12px #0001;
+}
+h1,h2{
+  margin-top:0;
+}
+input,textarea,select,button{
+  width:100%;
+  padding:12px;
+  margin:7px 0;
+  border:1px solid #d1d5db;
+  border-radius:7px;
+  font-size:15px;
+}
+textarea{
+  min-height:150px;
+  resize:vertical;
+}
+button{
+  background:#111827;
+  color:white;
+  border:0;
+  cursor:pointer;
+}
+button:hover{
+  opacity:.9;
+}
+.logout{
+  background:#dc2626;
+}
+.success{
+  color:green;
+  font-weight:bold;
+}
+.error{
+  color:red;
+  font-weight:bold;
+}
+.news-item,.ad-item{
+  border:1px solid #e5e7eb;
+  padding:15px;
+  margin:10px 0;
+  border-radius:8px;
+}
+.news-item img{
+  max-width:180px;
+  max-height:120px;
+  object-fit:cover;
+  border-radius:6px;
+}
+.hidden{
+  display:none;
+}
+.header{
+  background:#111827;
+  color:white;
+  padding:18px;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="loginBox" class="card">
+  <h2>🔐 Admin Login</h2>
+
+  <input id="email" type="email"
+    placeholder="Admin Email">
+
+  <input id="password" type="password"
+    placeholder="Password">
+
+  <button onclick="login()">Login</button>
+
+  <p id="loginError" class="error"></p>
+</div>
+
+
+<!-- ADMIN DASHBOARD -->
+<div id="dashboard" class="hidden">
+
+  <div class="header">
+    <h1>📰 ঘটনার পিছনে — Admin Panel</h1>
+    <p>নিউজ, বিজ্ঞাপন ও মন্তব্য ব্যবস্থাপনা</p>
+  </div>
+
+
+  <!-- NEW NEWS -->
+  <div class="card">
+
+    <h2>📝 নতুন নিউজ প্রকাশ করুন</h2>
+
+    <input id="title"
+      placeholder="নিউজের শিরোনাম">
+
+    <textarea id="excerpt"
+      placeholder="সংক্ষিপ্ত বিবরণ"></textarea>
+
+    <textarea id="content"
+      placeholder="সম্পূর্ণ নিউজ লিখুন"></textarea>
+
+    <select id="category_id">
+      <option value="">ক্যাটাগরি নির্বাচন করুন</option>
+    </select>
+
+    <input id="image"
+      type="file"
+      accept="image/*">
+
+    <button onclick="addNews()">
+      ✅ নিউজ Publish করুন
+    </button>
+
+    <p id="newsMsg"></p>
+
+  </div>
+
+
+  <!-- NEWS LIST -->
+  <div class="card">
+
+    <h2>📚 প্রকাশিত নিউজ</h2>
+
+    <div id="newsList">
+      নিউজ লোড হচ্ছে...
+    </div>
+
+  </div>
+
+
+  <!-- ADS -->
+  <div class="card">
+
+    <h2>📢 বিজ্ঞাপনের আবেদন</h2>
+
+    <div id="adsList">
+      বিজ্ঞাপন লোড হচ্ছে...
+    </div>
+
+  </div>
+
+
+  <!-- COMMENTS -->
+  <div class="card">
+
+    <h2>💬 মন্তব্য ব্যবস্থাপনা</h2>
+
+    <div id="commentsList">
+      মন্তব্য লোড হচ্ছে...
+    </div>
+
+  </div>
+
+
+  <button class="logout" onclick="logout()">
+    🚪 Logout
+  </button>
+
+</div>
+
+</div>
+
+
+<script>
+
+async function api(url, options={}){
+
+  const res = await fetch(url,{
+    ...options,
+    credentials:'include'
+  });
+
+  let data={};
+
+  try{
+    data=await res.json();
+  }catch(e){}
+
+  if(!res.ok){
+    throw new Error(data.error || 'Request failed');
+  }
+
+  return data;
+}
+
+
+async function login(){
+
+  const email=
+    document.getElementById('email').value.trim();
+
+  const password=
+    document.getElementById('password').value;
+
+  const error=
+    document.getElementById('loginError');
+
+  error.textContent='';
+
+  try{
+
+    const data=await api('/api/auth/login',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        email,
+        password
+      })
+    });
+
+    if(data.user && data.user.role==='admin'){
+
+      localStorage.setItem(
+        'adminLoggedIn',
+        'true'
+      );
+
+      showAdmin();
+
+    }else{
+
+      error.textContent=
+        'এই account Admin নয়';
+
+    }
+
+  }catch(e){
+
+    error.textContent=e.message;
+
+  }
+
+}
+
+
+function showAdmin(){
+
+  document.getElementById('loginBox')
+    .classList.add('hidden');
+
+  document.getElementById('dashboard')
+    .classList.remove('hidden');
+
+  loadAll();
+
+}
+
+
+async function addNews(){
+
+  const title=
+    document.getElementById('title').value.trim();
+
+  const excerpt=
+    document.getElementById('excerpt').value.trim();
+
+  const content=
+    document.getElementById('content').value.trim();
+
+  const category_id=
+    document.getElementById('category_id').value;
+
+  const image=
+    document.getElementById('image');
+
+  const msg=
+    document.getElementById('newsMsg');
+
+
+  if(!title || !content){
+
+    msg.className='error';
+
+    msg.textContent=
+      'শিরোনাম ও সম্পূর্ণ নিউজ লিখুন';
+
+    return;
+
+  }
+
+
+  const fd=new FormData();
+
+  fd.append('title',title);
+  fd.append('excerpt',excerpt);
+  fd.append('content',content);
+  fd.append('category_id',category_id);
+
+  if(image.files[0]){
+
+    fd.append('image',image.files[0]);
+
+  }
+
+
+  try{
+
+    const data=await api(
+      '/api/admin/news',
+      {
+        method:'POST',
+        body:fd
+      }
+    );
+
+
+    if(data.ok){
+
+      msg.className='success';
+
+      msg.textContent=
+        '✅ নিউজ সফলভাবে Publish হয়েছে';
+
+      document.getElementById('title').value='';
+      document.getElementById('excerpt').value='';
+      document.getElementById('content').value='';
+      document.getElementById('category_id').value='';
+      document.getElementById('image').value='';
+
+      loadNews();
+
+    }
+
+  }catch(e){
+
+    msg.className='error';
+
+    msg.textContent=e.message;
+
+  }
+
+}
+
+
+async function loadCategories(){
+
+  try{
+
+    const cats=
+      await api('/api/categories');
+
+    const select=
+      document.getElementById('category_id');
+
+    select.innerHTML=
+      '<option value="">ক্যাটাগরি নির্বাচন করুন</option>';
+
+    cats.forEach(c=>{
+
+      select.innerHTML+=
+        `<option value="${c.id}">
+          ${c.name}
+        </option>`;
+
+    });
+
+  }catch(e){
+
+    console.log(e);
+
+  }
+
+}
+
+
+async function loadNews(){
+
+  const box=
+    document.getElementById('newsList');
+
+  try{
+
+    const news=
+      await api('/api/admin/news');
+
+    if(!news.length){
+
+      box.innerHTML=
+        '<p>এখনো কোনো নিউজ নেই</p>';
+
+      return;
+
+    }
+
+    box.innerHTML='';
+
+    news.forEach(n=>{
+
+      box.innerHTML+=`
+
+        <div class="news-item">
+
+          <h3>${n.title}</h3>
+
+          <p>${n.excerpt || ''}</p>
+
+          ${
+            n.image
+            ?
+            `<img src="${n.image}">`
+            :
+            ''
+          }
+
+          <br>
+
+          <button
+            onclick="deleteNews(${n.id})"
+            style="background:#dc2626">
+
+            🗑️ Delete
+
+          </button>
+
+        </div>
+
+      `;
+
+    });
+
+  }catch(e){
+
+    box.innerHTML=
+      `<p class="error">${e.message}</p>`;
+
+  }
+
+}
+
+
+async function deleteNews(id){
+
+  if(!confirm('এই নিউজটি Delete করবেন?')){
+
+    return;
+
+  }
+
+  try{
+
+    await api(
+      '/api/admin/news/'+id,
+      {
+        method:'DELETE'
+      }
+    );
+
+    loadNews();
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+
+}
+
+
+async function loadAds(){
+
+  const box=
+    document.getElementById('adsList');
+
+  try{
+
+    const ads=
+      await api('/api/admin/ads');
+
+    if(!ads.length){
+
+      box.innerHTML=
+        '<p>কোনো বিজ্ঞাপনের আবেদন নেই</p>';
+
+      return;
+
+    }
+
+    box.innerHTML='';
+    news.forEach(n=>{
+
+      box.innerHTML+=`
+
+        <div class="news-item">
+
+          <h3>${n.title}</h3>
+
+          <p>${n.excerpt || ''}</p>
+
+          ${
+            n.image
+            ?
+            `<img src="${n.image}">`
+            :
+            ''
+          }
+
+          <br>
+
+          <button
+            onclick="deleteNews(${n.id})"
+            style="background:#dc2626">
+
+            🗑️ Delete
+
+          </button>
+
+        </div>
+
+      `;
+
+    });
+
+  }catch(e){
+
+    box.innerHTML=
+      `<p class="error">${e.message}</p>`;
+
+  }
+
+}
+
+
+async function deleteNews(id){
+
+  if(!confirm('এই নিউজটি Delete করবেন?')){
+
+    return;
+
+  }
+
+  try{
+
+    await api(
+      '/api/admin/news/'+id,
+      {
+        method:'DELETE'
+      }
+    );
+
+    loadNews();
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+
+}
+
+
+async function loadAds(){
+
+  const box=
+    document.getElementById('adsList');
+
+  try{
+
+    const ads=
+      await api('/api/admin/ads');
+
+    if(!ads.length){
+
+      box.innerHTML=
+        '<p>কোনো বিজ্ঞাপনের আবেদন নেই</p>';
+
+      return;
+
+    }
+
+    box.innerHTML='';
+
+    ads.forEach(a=>{
+
+      box.innerHTML+=`
+
+        <div class="ad-item">
+
+          <h3>${a.title}</h3>
+
+          <p>Advertiser: ${a.advertiser || ''}</p>
+
+          <p>Email: ${a.email || ''}</p>
+
+          <p>Status: <b>${a.status}</b></p>
+
+          <button
+            onclick="updateAd(${a.id},'approved')">
+
+            ✅ Approve
+
+          </button>
+
+          <button
+            onclick="updateAd(${a.id},'rejected')"
+            style="background:#dc2626">
+
+            ❌ Reject
+
+          </button>
+
+        </div>
+
+      `;
+
+    });
+
+  }catch(e){
+
+    box.innerHTML=
+      `<p class="error">${e.message}</p>`;
+
+  }
+
+}
+
+
+async function updateAd(id,status){
+
+  try{
+
+    await api(
+      '/api/admin/ads/'+id,
+      {
+        method:'PATCH',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({status})
+      }
+    );
+
+    loadAds();
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+
+}
+
+
+async function loadComments(){
+
+  const box=
+    document.getElementById('commentsList');
+
+  try{
+
+    const comments=
+      await api('/api/admin/comments');
+
+    if(!comments.length){
+
+      box.innerHTML=
+        '<p>কোনো মন্তব্য নেই</p>';
+
+      return;
+
+    }
+
+    box.innerHTML='';
+
+    comments.forEach(c=>{
+
+      box.innerHTML+=`
+
+        <div class="news-item">
+
+          <b>${c.name}</b>
+
+          <p>${c.text}</p>
+
+          <p>Status: ${c.status}</p>
+
+          <button
+            onclick="updateComment(${c.id},'approved')">
+
+            ✅ Approve
+
+          </button>
+
+          <button
+            onclick="updateComment(${c.id},'rejected')"
+            style="background:#dc2626">
+
+            ❌ Reject
+
+          </button>
+
+        </div>
+
+      `;
+
+    });
+
+  }catch(e){
+
+    box.innerHTML=
+      `<p class="error">${e.message}</p>`;
+
+  }
+
+}
+
+
+async function updateComment(id,status){
+
+  try{
+
+    await api(
+      '/api/admin/comments/'+id,
+      {
+        method:'PATCH',
+        headers:{
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({status})
+      }
+    );
+
+    loadComments();
+
+  }catch(e){
+
+    alert(e.message);
+
+  }
+
+}
+
+
+function loadAll(){
+
+  loadCategories();
+  loadNews();
+  loadAds();
+  loadComments();
+
+}
+
+
+async function logout(){
+
+  try{
+
+    await api(
+      '/api/auth/logout',
+      {
+        method:'POST'
+      }
+    );
+
+  }catch(e){}
+
+  localStorage.removeItem('adminLoggedIn');
+
+  location.reload();
+
+}
+
+
+(async function(){
+
+  try{
+
+    const data=
+      await api('/api/me');
+
+    if(
+      data.user &&
+      data.user.role==='admin'
+    ){
+
+      showAdmin();
+
+    }
+
+  }catch(e){
+
+    console.log(e);
+
+  }
+
+})();
+
+</script>
+
+</body>
+</html>
