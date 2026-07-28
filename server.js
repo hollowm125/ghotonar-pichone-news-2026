@@ -24,9 +24,8 @@ app.use(session({
 app.use(express.static(path.join(__dirname,"public")));
 
 console.log("PostgreSQL backend started");
-// Database tables initialization
-(async () => {
-  try {
+async function initDatabase(){
+    try{
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -38,15 +37,13 @@ console.log("PostgreSQL backend started");
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-
-    await pool.query(`
+          await pool.query(`
       CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL
       );
     `);
-
-    await pool.query(`
+          await pool.query(`
       CREATE TABLE IF NOT EXISTS news (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
@@ -57,8 +54,7 @@ console.log("PostgreSQL backend started");
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-
-    await pool.query(`
+          await pool.query(`
       CREATE TABLE IF NOT EXISTS comments (
         id SERIAL PRIMARY KEY,
         news_id INTEGER,
@@ -68,24 +64,27 @@ console.log("PostgreSQL backend started");
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-
-    await pool.query(`
+          await pool.query(`
       CREATE TABLE IF NOT EXISTS ads (
         id SERIAL PRIMARY KEY,
         advertiser TEXT,
         email TEXT,
-        title TEXT,
+title TEXT,
         status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
+          console.log("Database tables ready");
 
-    console.log("Database tables ready");
+  }catch(error){
 
-  } catch (error) {
     console.error("Database setup error:", error.message);
+    process.exit(1);
+
   }
-})();
+
+}
+initDatabase();
 app.get("/api/me",(req,res)=>{
   res.json({user:req.session.user||null});
 });
@@ -116,8 +115,7 @@ app.post("/api/auth/register",async(req,res)=>{
 
     res.json({ok:true,user:req.session.user});
 
-  }catch(e){
-    res.status(500).json({error:e.message});
+  }catch(e){res.status(500).json({error:e.message});
   }
 });
 app.post("/api/auth/login",async(req,res)=>{
@@ -165,14 +163,10 @@ app.get("/api/news",async(req,res)=>{
       "SELECT * FROM news ORDER BY created_at DESC"
     );
 
-    res.json(result.rows);
-
-  }catch(e){
+    res.json(result.rows);  }catch(e){
     res.status(500).json({error:e.message});
   }
 });
-
-
 app.post("/api/news",async(req,res)=>{
   try{
     const {title,content,image}=req.body;
@@ -200,8 +194,7 @@ app.get("/api/admin/check",(req,res)=>{
 app.get("*",(req,res)=>{
   res.sendFile(path.join(__dirname,"public","index.html"));
 });
-
-
 app.listen(PORT,()=>{
   console.log(`Server running on port ${PORT}`);
 });
+);
