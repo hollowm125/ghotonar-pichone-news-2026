@@ -24,6 +24,68 @@ app.use(session({
 app.use(express.static(path.join(__dirname,"public")));
 
 console.log("PostgreSQL backend started");
+// Database tables initialization
+(async () => {
+  try {
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT DEFAULT 'advertiser',
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS news (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        excerpt TEXT,
+        content TEXT NOT NULL,
+        image TEXT,
+        category_id INTEGER,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        news_id INTEGER,
+        name TEXT,
+        text TEXT,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS ads (
+        id SERIAL PRIMARY KEY,
+        advertiser TEXT,
+        email TEXT,
+        title TEXT,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    console.log("Database tables ready");
+
+  } catch (error) {
+    console.error("Database setup error:", error.message);
+  }
+})();
 app.get("/api/me",(req,res)=>{
   res.json({user:req.session.user||null});
 });
