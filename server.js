@@ -74,6 +74,29 @@ title TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
+      // Create default admin account if it doesn't exist
+const adminEmail = "admin@ghotonarpichone.com";
+
+const adminExists = await pool.query(
+  "SELECT id FROM users WHERE email=$1",
+  [adminEmail]
+);
+
+if (adminExists.rows.length === 0) {
+  const adminPassword = bcrypt.hashSync("Admin@12345", 10);
+
+  await pool.query(
+    "INSERT INTO users(name,email,password,role) VALUES($1,$2,$3,$4)",
+    [
+      "Administrator",
+      adminEmail,
+      adminPassword,
+      "admin"
+    ]
+  );
+
+  console.log("Default admin account created");
+}
           console.log("Database tables ready");
 
   }catch(error){
