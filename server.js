@@ -84,7 +84,11 @@ title TEXT,
   }
 
 }
-initDatabase();
+initDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+});
 app.get("/api/me",(req,res)=>{
   res.json({user:req.session.user||null});
 });
@@ -194,7 +198,4 @@ app.get("/api/admin/check",(req,res)=>{
 app.get("*",(req,res)=>{
   res.sendFile(path.join(__dirname,"public","index.html"));
 });
-app.listen(PORT,()=>{
-  console.log(`Server running on port ${PORT}`);
-});
-);
+
