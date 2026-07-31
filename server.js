@@ -194,6 +194,16 @@ app.post("/api/auth/logout",(req,res)=>{
     res.json({ok:true});
   });
 });
+app.get("/api/categories",async(req,res)=>{
+  try{
+    const result=await pool.query(
+      "SELECT * FROM categories ORDER BY id ASC"
+    );
+    res.json(result.rows);
+  }catch(e){
+    res.status(500).json({error:e.message});
+  }
+});
 app.get("/api/news",async(req,res)=>{
   try{
     const result=await pool.query(
