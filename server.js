@@ -214,26 +214,167 @@ app.get("/api/news",async(req,res)=>{
     res.status(500).json({error:e.message});
   }
 });
-app.post("/api/news",async(req,res)=>{
-  try{
-    const {title,content,image}=req.body;
+app.post("/api/admin/news", async (req, res) => {
+  try {
 
-    const result=await pool.query(
-      "INSERT INTO news(title,content,image) VALUES($1,$2,$3) RETURNING *",
-      [title,content,image]
+    if (!req.session.user || req.session.user.role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const {
+      title,
+      excerpt,
+      content,
+      category_id,
+      image
+    } = req.body;
+
+    const result = await pool.query(
+      `INSERT INTO news
+      (title, excerpt, content, category_id, image)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [
+        title,
+        excerpt,
+        content,
+        category_id || null,
+        image || null
+      ]
     );
 
-    res.json(result.rows[0]);
+    res.json({
+      ok: true,
+      news: result.rows[0]
+    });
 
-  }catch(e){
-    res.status(500).json({error:e.message});
+  } catch (e) {
+    res.status(500).json({
+      error: e.message
+    });
+  }
+});
+app.get("/api/admin/news", async (req, res) => {
+  try {
+
+    if (!req.session.user || req.session.user.role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const result = await pool.query(
+      "SELECT * FROM news ORDER BY created_at DESC"
+    );
+
+    res.json(result.rows);
+
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.delete("/api/admin/news/:id", async (req, res) => {
+  try {
+
+    if (!req.session.user || req.session.user.role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    await pool.query(
+      "DELETE FROM news WHERE id=$1",
+      [req.params.id]
+    );
+
+    res.json({ ok: true });
+
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+app.get("/api/admin/ads", async (req, res) => {
+  try {
+
+    if (!req.session.user || req.session.user.role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const result = await pool.query(
+      "SELECT * FROM ads ORDER BY created_at DESC"
+    );
+
+    res.json(result.rows);
+
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.patch("/api/admin/ads/:id", async (req, res) => {
+  try {
+
+    if (!req.session.user || req.session.user.role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const { status } = req.body;
+
+    await pool.query(
+      "UPDATE ads SET status=$1 WHERE id=$2",
+      [status, req.params.id]
+    );
+
+    res.json({ ok: true });
+
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/admin/comments", async (req, res) => {
+  try {
+
+    if (!req.session.user || req.session.user.role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const result = await pool.query(
+      "SELECT * FROM comments ORDER BY created_at DESC"
+    );
+
+    res.json(result.rows);
+
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.patch("/api/admin/comments/:id", async (req, res) => {
+  try {
+
+    if (!req.session.user || req.session.user.role !== "admin") {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    const { status } = req.body;
+
+    await pool.query(
+      "UPDATE comments SET status=$1 WHERE id=$2",
+      [status, req.params.id]
+    );
+
+    res.json({ ok: true });
+
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
   }
 });
 app.get("/api/admin/check",(req,res)=>{
   if(req.session.user && req.session.user.role==="admin"){
     return res.json({admin:true});
+  
   }
-
   res.json({admin:false});
 });
 
