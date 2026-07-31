@@ -26,7 +26,6 @@ app.use(express.static(path.join(__dirname,"public")));
 console.log("PostgreSQL backend started");
 async function initDatabase(){
     try{
-
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -37,13 +36,13 @@ async function initDatabase(){
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-          await pool.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL
       );
     `);
-          await pool.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS news (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
@@ -54,7 +53,7 @@ async function initDatabase(){
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-          await pool.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS comments (
         id SERIAL PRIMARY KEY,
         news_id INTEGER,
@@ -64,54 +63,46 @@ async function initDatabase(){
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-          await pool.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS ads (
         id SERIAL PRIMARY KEY,
         advertiser TEXT,
         email TEXT,
-title TEXT,
+        title TEXT,
         status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-      // Create default admin account if it doesn't exist
-const adminEmail = "admin@ghotonarpichone.com";
+      
+    // Create default admin account if it doesn't exist
+    const adminEmail = "admin@ghotonarpichone.com";
+    const adminExists = await pool.query(
+      "SELECT id FROM users WHERE email=$1",
+      [adminEmail]
+    );
 
-const adminExists = await pool.query(
-  "SELECT id FROM users WHERE email=$1",
-  [adminEmail]
-);
+    if (adminExists.rows.length === 0) {
+      const adminPassword = bcrypt.hashSync("Admin@12345", 10);
+      await pool.query(
+        "INSERT INTO users(name,email,password,role) VALUES($1,$2,$3,$4)",
+        ["Administrator", adminEmail, adminPassword, "admin"]
+      );
+      console.log("Default admin account created");
+    }
+    console.log("Database tables ready");
 
-if (adminExists.rows.length === 0) {
-  const adminPassword = bcrypt.hashSync("Admin@12345", 10);
-
-  await pool.query(
-    "INSERT INTO users(name,email,password,role) VALUES($1,$2,$3,$4)",
-    [
-      "Administrator",
-      adminEmail,
-      adminPassword,
-      "admin"
-    ]
-  );
-
-  console.log("Default admin account created");
-}
-          console.log("Database tables ready");
-
-  }catch(error){
-
+  } catch(error) {
     console.error("Database setup error:", error.message);
     process.exit(1);
-
   }
-
 }
+
 initDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 });
+
 app.get("/api/debug/users", async (req, res) => {
   try {
     const result = await pool.query(
@@ -122,6 +113,7 @@ app.get("/api/debug/users", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.get("/api/me",(req,res)=>{
   res.json({user:req.session.user||null});
 });
@@ -149,12 +141,13 @@ app.post("/api/auth/register",async(req,res)=>{
     );
 
     req.session.user=result.rows[0];
-
     res.json({ok:true,user:req.session.user});
 
-  }catch(e){res.status(500).json({error:e.message});
+  }catch(e){
+    res.status(500).json({error:e.message});
   }
 });
+
 app.post("/api/auth/login",async(req,res)=>{
   try{
     const {email,password}=req.body;
@@ -168,7 +161,6 @@ app.post("/api/auth/login",async(req,res)=>{
       return res.status(401).json({error:"ইমেইল পাওয়া যায়নি"});
 
     const user=result.rows[0];
-
     const match=bcrypt.compareSync(password,user.password);
 
     if(!match)
@@ -188,12 +180,12 @@ app.post("/api/auth/login",async(req,res)=>{
   }
 });
 
-
 app.post("/api/auth/logout",(req,res)=>{
   req.session.destroy(()=>{
     res.json({ok:true});
   });
 });
+
 app.get("/api/categories",async(req,res)=>{
   try{
     const result=await pool.query(
@@ -204,59 +196,39 @@ app.get("/api/categories",async(req,res)=>{
     res.status(500).json({error:e.message});
   }
 });
+
 app.get("/api/news",async(req,res)=>{
   try{
     const result=await pool.query(
       "SELECT * FROM news ORDER BY created_at DESC"
     );
-
-    res.json(result.rows);  }catch(e){
+    res.json(result.rows);  
+  }catch(e){
     res.status(500).json({error:e.message});
   }
 });
+
 app.post("/api/admin/news", async (req, res) => {
   try {
-
     if (!req.session.user || req.session.user.role !== "admin") {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const {
-      title,
-      excerpt,
-      content,
-      category_id,
-      image
-    } = req.body;
+    const { title, excerpt, content, category_id, image } = req.body;
 
     const result = await pool.query(
-      `INSERT INTO news
-      (title, excerpt, content, category_id, image)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING *`,
-      [
-        title,
-        excerpt,
-        content,
-        category_id || null,
-        image || null
-      ]
+      `INSERT INTO news (title, excerpt, content, category_id, image) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [title, excerpt, content, category_id || null, image || null]
     );
 
-    res.json({
-      ok: true,
-      news: result.rows[0]
-    });
-
+    res.json({ ok: true, news: result.rows[0] });
   } catch (e) {
-    res.status(500).json({
-      error: e.message
-    });
+    res.status(500).json({ error: e.message });
   }
 });
+
 app.get("/api/admin/news", async (req, res) => {
   try {
-
     if (!req.session.user || req.session.user.role !== "admin") {
       return res.status(403).json({ error: "Unauthorized" });
     }
@@ -264,9 +236,7 @@ app.get("/api/admin/news", async (req, res) => {
     const result = await pool.query(
       "SELECT * FROM news ORDER BY created_at DESC"
     );
-
     res.json(result.rows);
-
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -274,7 +244,6 @@ app.get("/api/admin/news", async (req, res) => {
 
 app.delete("/api/admin/news/:id", async (req, res) => {
   try {
-
     if (!req.session.user || req.session.user.role !== "admin") {
       return res.status(403).json({ error: "Unauthorized" });
     }
@@ -283,16 +252,14 @@ app.delete("/api/admin/news/:id", async (req, res) => {
       "DELETE FROM news WHERE id=$1",
       [req.params.id]
     );
-
     res.json({ ok: true });
-
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
+
 app.get("/api/admin/ads", async (req, res) => {
   try {
-
     if (!req.session.user || req.session.user.role !== "admin") {
       return res.status(403).json({ error: "Unauthorized" });
     }
@@ -300,9 +267,7 @@ app.get("/api/admin/ads", async (req, res) => {
     const result = await pool.query(
       "SELECT * FROM ads ORDER BY created_at DESC"
     );
-
     res.json(result.rows);
-
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -310,20 +275,16 @@ app.get("/api/admin/ads", async (req, res) => {
 
 app.patch("/api/admin/ads/:id", async (req, res) => {
   try {
-
     if (!req.session.user || req.session.user.role !== "admin") {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
     const { status } = req.body;
-
     await pool.query(
       "UPDATE ads SET status=$1 WHERE id=$2",
       [status, req.params.id]
     );
-
     res.json({ ok: true });
-
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -331,7 +292,6 @@ app.patch("/api/admin/ads/:id", async (req, res) => {
 
 app.get("/api/admin/comments", async (req, res) => {
   try {
-
     if (!req.session.user || req.session.user.role !== "admin") {
       return res.status(403).json({ error: "Unauthorized" });
     }
@@ -339,9 +299,7 @@ app.get("/api/admin/comments", async (req, res) => {
     const result = await pool.query(
       "SELECT * FROM comments ORDER BY created_at DESC"
     );
-
     res.json(result.rows);
-
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -349,37 +307,28 @@ app.get("/api/admin/comments", async (req, res) => {
 
 app.patch("/api/admin/comments/:id", async (req, res) => {
   try {
-
     if (!req.session.user || req.session.user.role !== "admin") {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
     const { status } = req.body;
-
     await pool.query(
       "UPDATE comments SET status=$1 WHERE id=$2",
       [status, req.params.id]
     );
-
     res.json({ ok: true });
-
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-  }
-});
 app.get("/api/admin/check",(req,res)=>{
   if(req.session.user && req.session.user.role==="admin"){
     return res.json({admin:true});
-  
   }
   res.json({admin:false});
 });
 
-
 app.get("*",(req,res)=>{
   res.sendFile(path.join(__dirname,"public","index.html"));
 });
-
