@@ -112,6 +112,16 @@ initDatabase().then(() => {
     console.log(`Server running on port ${PORT}`);
   });
 });
+app.get("/api/debug/users", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id, name, email, role FROM users"
+    );
+    res.json(result.rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 app.get("/api/me",(req,res)=>{
   res.json({user:req.session.user||null});
 });
