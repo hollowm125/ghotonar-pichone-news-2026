@@ -42,6 +42,21 @@ async function initDatabase(){
         name TEXT NOT NULL
       );
     `);
+      await pool.query(`
+  INSERT INTO categories (name)
+  SELECT * FROM (
+    VALUES
+      ('জাতীয়'),
+      ('রাজনীতি'),
+      ('আন্তর্জাতিক'),
+      ('খেলাধুলা'),
+      ('বিনোদন'),
+      ('প্রযুক্তি')
+  ) AS v(name)
+  WHERE NOT EXISTS (
+    SELECT 1 FROM categories
+  );
+`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS news (
         id SERIAL PRIMARY KEY,
