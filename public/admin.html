@@ -367,7 +367,7 @@ async function loadCategories(){
   try{
 
     const cats=
-      await api('/api/categories');
+      await api('/api/categories');console.log(cats);
 
     const select=
       document.getElementById('category_id');
