@@ -18,8 +18,12 @@ app.use(express.urlencoded({extended:true}));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "secret",
-  resave:false,
-  saveUninitialized:false
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24,
+    httpOnly: true
+  }
 }));
 const upload = multer({
   storage: multer.memoryStorage()
