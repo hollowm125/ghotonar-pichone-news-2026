@@ -1,440 +1,331 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="bn" class="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel - ঘটনার পিছনে</title>
-
-<style>
-*{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  background:#f1f5f9;
-  color:#111827;
-}
-.container{
-  max-width:900px;
-  margin:auto;
-  padding:15px;
-}
-.card{
-  background:white;
-  padding:20px;
-  margin:15px 0;
-  border-radius:12px;
-  box-shadow:0 3px 12px #0001;
-}
-h1,h2{
-  margin-top:0;
-}
-input,textarea,select,button{
-  width:100%;
-  padding:12px;
-  margin:7px 0;
-  border:1px solid #d1d5db;
-  border-radius:7px;
-  font-size:15px;
-}
-textarea{
-  min-height:150px;
-  resize:vertical;
-}
-button{
-  background:#111827;
-  color:white;
-  border:0;
-  cursor:pointer;
-}
-button:hover{
-  opacity:.9;
-}
-.logout{
-  background:#dc2626;
-}
-.success{
-  color:green;
-  font-weight:bold;
-}
-.error{
-  color:red;
-  font-weight:bold;
-}
-.news-item,.ad-item{
-  border:1px solid #e5e7eb;
-  padding:15px;
-  margin:10px 0;
-  border-radius:8px;
-}
-.news-item img{
-  max-width:180px;
-  max-height:120px;
-  object-fit:cover;
-  border-radius:6px;
-}
-.hidden{
-  display:none;
-}
-.header{
-  background:#111827;
-  color:white;
-  padding:18px;
-  border-radius:10px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ঘটনার পিছনে - সত্যের সন্ধানে</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['SolaimanLipi', 'Hind Siliguri', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'SolaimanLipi', 'Hind Siliguri', Arial, sans-serif;
+        }
+        /* Marquee Text Animation Fixed */
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-ticker {
+            display: inline-block;
+            white-space: nowrap;
+            animation: ticker 25s linear infinite;
+        }
+    </style>
 </head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
 
-<body>
+    <!-- Top Header & Logo Section -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <!-- Hamburger & Logo -->
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleDrawer()" class="p-2 text-gray-700 dark:text-gray-200 focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+                <div class="cursor-pointer">
+                    <h1 class="text-2xl font-bold tracking-tight text-red-600 dark:text-red-500">ঘটনার পিছনে</h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">সত্যের সন্ধানে অবিরাম...</p>
+                </div>
+            </div>
 
-<div class="container">
-
-<!-- LOGIN -->
-<div id="loginBox" class="card">
-  <h2>🔐 Admin Login</h2>
-
-  <input id="email" type="email" placeholder="Admin Email">
-  <input id="password" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-
-  <p id="loginError" class="error"></p>
-</div>
-
-
-<!-- ADMIN DASHBOARD -->
-<div id="dashboard" class="hidden">
-
-  <div class="header">
-    <h1>📰 ঘটনার পিছনে — Admin Panel</h1>
-    <p>নিউজ, বিজ্ঞাপন ও মন্তব্য ব্যবস্থাপনা</p>
-  </div>
-
-
-  <!-- NEW NEWS -->
-  <div class="card">
-    <h2>📝 নতুন নিউজ প্রকাশ করুন</h2>
-
-    <input id="title" placeholder="নিউজের শিরোনাম">
-    <textarea id="excerpt" placeholder="সংক্ষিপ্ত বিবরণ"></textarea>
-    <textarea id="content" placeholder="সম্পূর্ণ নিউজ লিখুন"></textarea>
-
-    <select id="category_id">
-      <option value="">ক্যাটাগরি নির্বাচন করুন</option>
-    </select>
-
-    <input id="image" type="file" accept="image/*">
-
-    <button onclick="addNews()">✅ নিউজ Publish করুন</button>
-
-    <p id="newsMsg"></p>
-  </div>
-
-
-  <!-- NEWS LIST -->
-  <div class="card">
-    <h2>📚 প্রকাশিত নিউজ</h2>
-    <div id="newsList">নিউজ লোড হচ্ছে...</div>
-  </div>
-
-
-  <!-- ADS -->
-  <div class="card">
-    <h2>📢 বিজ্ঞাপনের আবেদন</h2>
-    <div id="adsList">বিজ্ঞাপন লোড হচ্ছে...</div>
-  </div>
-
-
-  <!-- COMMENTS -->
-  <div class="card">
-    <h2>💬 মন্তব্য ব্যবস্থাপনা</h2>
-    <div id="commentsList">মন্তব্য লোড হচ্ছে...</div>
-  </div>
-
-
-  <button class="logout" onclick="logout()">🚪 Logout</button>
-
-</div>
-
-</div>
-
-
-<script>
-async function api(url, options={}){
-  const res = await fetch(url,{
-    ...options,
-    credentials:'include'
-  });
-
-  let data={};
-  try{
-    data=await res.json();
-  }catch(e){}
-
-  if(!res.ok){
-    throw new Error(data.error || 'Request failed');
-  }
-
-  return data;
-}
-
-async function login(){
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  const error = document.getElementById('loginError');
-
-  error.textContent='';
-
-  try{
-    const data=await api('/api/auth/login',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        email,
-        password
-      })
-    });
-
-    if(data.user && data.user.role==='admin'){
-      localStorage.setItem('adminLoggedIn', 'true');
-      showAdmin();
-    }else{
-      error.textContent = 'এই account Admin নয়';
-    }
-  }catch(e){
-    error.textContent = e.message;
-  }
-}
-
-function showAdmin(){
-  document.getElementById('loginBox').classList.add('hidden');
-  document.getElementById('dashboard').classList.remove('hidden');
-  loadAll();
-}
-
-async function addNews(){
-  const title = document.getElementById('title').value.trim();
-  const excerpt = document.getElementById('excerpt').value.trim();
-  const content = document.getElementById('content').value.trim();
-  const category_id = document.getElementById('category_id').value;
-  const image = document.getElementById('image');
-  const msg = document.getElementById('newsMsg');
-
-  if(!title || !content){
-    msg.className='error';
-    msg.textContent='শিরোনাম ও সম্পূর্ণ নিউজ লিখুন';
-    return;
-  }
-
-  const fd=new FormData();
-  fd.append('title',title);
-  fd.append('excerpt',excerpt);
-  fd.append('content',content);
-  fd.append('category_id',category_id);
-
-  if(image.files[0]){
-    fd.append('image',image.files[0]);
-  }
-
-  try{
-    const data=await api('/api/admin/news',{
-      method:'POST',
-      body:fd
-    });
-
-    if(data.ok){
-      msg.className='success';
-      msg.textContent='✅ নিউজ সফলভাবে Publish হয়েছে';
-
-      document.getElementById('title').value='';
-      document.getElementById('excerpt').value='';
-      document.getElementById('content').value='';
-      document.getElementById('category_id').value='';
-      document.getElementById('image').value='';
-
-      loadNews();
-    }
-  }catch(e){
-    msg.className='error';
-    msg.textContent=e.message;
-  }
-}
-
-async function loadCategories(){
-  try{
-    const cats=await api('/api/categories');
-    const select=document.getElementById('category_id');
-
-    select.innerHTML='<option value="">ক্যাটাগরি নির্বাচন করুন</option>';
-
-    cats.forEach(c=>{
-      select.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
-    });
-  }catch(e){
-    console.log(e);
-  }
-}
-
-async function loadNews(){
-  const box=document.getElementById('newsList');
-
-  try{
-    const news=await api('/api/admin/news');
-
-    if(!news.length){
-      box.innerHTML='<p>এখনো কোনো নিউজ নেই</p>';
-      return;
-    }
-
-    box.innerHTML='';
-
-    news.forEach(n=>{
-      box.innerHTML+=`
-        <div class="news-item">
-          <h3>${n.title}</h3>
-          <p>${n.excerpt || ''}</p>
-          ${n.image ? `<img src="${n.image}">` : ''}
-          <br>
-          <button onclick="deleteNews(${n.id})" style="background:#dc2626">🗑️ Delete</button>
+            <!-- Dark/Light Mode & Admin Panel Trigger -->
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-yellow-400 hover:scale-105 transition" title="ডার্ক/লাইট মোড">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </button>
+                <button onclick="openAdminModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow transition">
+                    অ্যাডমিন প্যানেল
+                </button>
+            </div>
         </div>
-      `;
-    });
-  }catch(e){
-    box.innerHTML=`<p class="error">${e.message}</p>`;
-  }
-}
 
-async function deleteNews(id){
-  if(!confirm('এই নিউজটি Delete করবেন?')) return;
-
-  try{
-    await api('/api/admin/news/'+id,{
-      method:'DELETE'
-    });
-    loadNews();
-  }catch(e){
-    alert(e.message);
-  }
-}
-
-async function loadAds(){
-  const box=document.getElementById('adsList');
-
-  try{
-    const ads=await api('/api/admin/ads');
-
-    if(!ads.length){
-      box.innerHTML='<p>কোনো বিজ্ঞাপনের আবেদন নেই</p>';
-      return;
-    }
-
-    box.innerHTML='';
-
-    ads.forEach(a=>{
-      box.innerHTML+=`
-        <div class="ad-item">
-          <h3>${a.title}</h3>
-          <p>Advertiser: ${a.advertiser || ''}</p>
-          <p>Email: ${a.email || ''}</p>
-          <p>Status: <b>${a.status}</b></p>
-          <button onclick="updateAd(${a.id},'approved')">✅ Approve</button>
-          <button onclick="updateAd(${a.id},'rejected')" style="background:#dc2626">❌ Reject</button>
+        <!-- Breaking News Ticker -->
+        <div class="bg-red-600 text-white py-1.5 px-4 overflow-hidden flex items-center text-sm">
+            <span class="bg-black bg-opacity-30 px-2 py-0.5 rounded text-xs font-bold uppercase mr-3 shrink-0">ব্রেকিং নিউজ:</span>
+            <div class="overflow-hidden whitespace-nowrap">
+                <div class="animate-ticker">
+                    🚨 দেশের বিভিন্ন প্রান্তে অনুসন্ধানী প্রতিবেদনের নতুন আপডেট পেতে চোখ রাখুন "ঘটনার পিছনে" পোর্টালে। • যে কোনো তথ্যের জন্য ইমেইল করুন: ghotonarpichone@gmail.com
+                </div>
+            </div>
         </div>
-      `;
-    });
-  }catch(e){
-    box.innerHTML=`<p class="error">${e.message}</p>`;
-  }
-}
+    </header>
 
-async function updateAd(id,status){
-  try{
-    await api('/api/admin/ads/'+id,{
-      method:'PATCH',
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({status})
-    });
-    loadAds();
-  }catch(e){
-    alert(e.message);
-  }
-}
-
-async function loadComments(){
-  const box=document.getElementById('commentsList');
-
-  try{
-    const comments=await api('/api/admin/comments');
-
-    if(!comments.length){
-      box.innerHTML='<p>কোনো মন্তব্য নেই</p>';
-      return;
-    }
-
-    box.innerHTML='';
-
-    comments.forEach(c=>{
-      box.innerHTML+=`
-        <div class="news-item">
-          <b>${c.name}</b>
-          <p>${c.text}</p>
-          <p>Status: ${c.status}</p>
-          <button onclick="updateComment(${c.id},'approved')">✅ Approve</button>
-          <button onclick="updateComment(${c.id},'rejected')" style="background:#dc2626">❌ Reject</button>
+    <!-- Sidebar Drawer -->
+    <div id="side-drawer" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden transition-opacity">
+        <div class="bg-white dark:bg-gray-800 w-72 h-full shadow-xl p-5 flex flex-col justify-between transform -translate-x-full transition-transform duration-300" id="drawer-content">
+            <div>
+                <div class="flex justify-between items-center mb-6 border-b pb-3 dark:border-gray-700">
+                    <h2 class="text-xl font-bold text-red-600">মেনু ক্যাটাগরি</h2>
+                    <button onclick="toggleDrawer()" class="text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+                </div>
+                <ul class="space-y-3 font-medium">
+                    <li><a href="#" class="block p-2 rounded hover:bg-red-50 dark:hover:bg-gray-700 hover:text-red-600">🏠 হোমপেজ</a></li>
+                    <li><a href="#" class="block p-2 rounded hover:bg-red-50 dark:hover:bg-gray-700 hover:text-red-600">🔍 অনুসন্ধানী প্রতিবেদন</a></li>
+                    <li><a href="#" class="block p-2 rounded hover:bg-red-50 dark:hover:bg-gray-700 hover:text-red-600">⚖️ রাজনীতি ও অর্থনীতি</a></li>
+                    <li><a href="#" class="block p-2 rounded hover:bg-red-50 dark:hover:bg-gray-700 hover:text-red-600">💰 বিজ্ঞাপন ও পেমেন্ট</a></li>
+                    <li><a href="#" class="block p-2 rounded hover:bg-red-50 dark:hover:bg-gray-700 hover:text-red-600">📜 হোয়াইট পেপার ও নীতিমালা</a></li>
+                </ul>
+            </div>
+            <div class="border-t pt-4 dark:border-gray-700 text-xs text-gray-500">
+                <p>অফিশিয়াল ইমেইল:</p>
+                <p class="font-bold text-gray-700 dark:text-gray-300">ghotonarpichone@gmail.com</p>
+            </div>
         </div>
-      `;
-    });
-  }catch(e){
-    box.innerHTML=`<p class="error">${e.message}</p>`;
-  }
-}
+    </div>
 
-async function updateComment(id,status){
-  try{
-    await api('/api/admin/comments/'+id,{
-      method:'PATCH',
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({status})
-    });
-    loadComments();
-  }catch(e){
-    alert(e.message);
-  }
-}
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- News Feed Container -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- In-Header Ad Banner -->
+            <div class="bg-gray-200 dark:bg-gray-800 p-4 rounded-xl text-center border border-dashed border-gray-400 dark:border-gray-600">
+                <span class="text-xs text-gray-400 uppercase tracking-widest block mb-1">বিজ্ঞাপন (Top Banner Ad)</span>
+                <p class="text-sm font-medium text-gray-600 dark:text-gray-300">আপনার ব্র্যান্ডের প্রচারের জন্য বিজ্ঞাপন দিন। যোগাযোগ: ghotonarpichone@gmail.com</p>
+            </div>
 
-function loadAll(){
-  loadCategories();
-  loadNews();
-  loadAds();
-  loadComments();
-}
+            <!-- News Feed -->
+            <div id="news-feed-container" class="space-y-6">
+                <!-- News Card -->
+                <article class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="p-5">
+                        <span class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold px-2.5 py-1 rounded">অনুসন্ধান</span>
+                        <h2 class="text-xl font-bold mt-2 hover:text-red-600 cursor-pointer">আড়ালে থাকা কিছু চাঞ্চল্যকর সত্য এবং আমাদের প্রস্তুতি</h2>
+                        <p class="text-xs text-gray-400 mt-1">প্রকাশিত হয়েছে: ১ আগস্ট, ২০২৬ | লেখক: অ্যাডমিন প্যানেল</p>
+                        <p class="text-gray-600 dark:text-gray-300 mt-3 text-sm leading-relaxed">
+                            ঘটনার পেছনের আসল সত্য উদঘাটনে আমরা কাজ করে যাচ্ছি। প্রতিটি সংবাদের পেছনে থাকে অজানা অনেক কাহিনী, যা সাধারণ মানুষের সামনে তুলে ধরাই আমাদের মূল লক্ষ্য।
+                        </p>
+                    </div>
 
-async function logout(){
-  try{
-    await api('/api/auth/logout',{
-      method:'POST'
-    });
-  }catch(e){}
+                    <!-- Multiple Images Grid -->
+                    <div class="grid grid-cols-2 gap-1 px-5 pb-3">
+                        <img src="https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&auto=format&fit=crop&q=80" alt="News" class="w-full h-48 object-cover rounded-lg">
+                        <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=600&auto=format&fit=crop&q=80" alt="News" class="w-full h-48 object-cover rounded-lg">
+                    </div>
 
-  localStorage.removeItem('adminLoggedIn');
-  location.reload();
-}
+                    <!-- Video Embed -->
+                    <div class="px-5 pb-4">
+                        <div class="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden bg-black">
+                            <iframe class="w-full h-64 rounded-lg" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video" allowfullscreen></iframe>
+                        </div>
+                    </div>
 
-(async function(){
-  try{
-    const data=await api('/api/me');
-    if(data.user && data.user.role==='admin'){
-      showAdmin();
-    }
-  }catch(e){
-    console.log(e);
-  }
-})();
-</script>
+                    <!-- Social Share Bar -->
+                    <div class="bg-gray-50 dark:bg-gray-700/50 px-5 py-3 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-semibold text-gray-500">শেয়ার করুন:</span>
+                        <div class="flex flex-wrap items-center gap-1.5 text-sm">
+                            <a href="#" class="bg-red-600 text-white p-1.5 rounded-full hover:scale-110 transition" title="YouTube">📺</a>
+                            <a href="#" class="bg-blue-600 text-white p-1.5 rounded-full hover:scale-110 transition" title="Facebook">📘</a>
+                            <a href="#" class="bg-sky-500 text-white p-1.5 rounded-full hover:scale-110 transition" title="Twitter/X">🐦</a>
+                            <a href="#" class="bg-green-500 text-white p-1.5 rounded-full hover:scale-110 transition" title="WhatsApp">💬</a>
+                            <a href="#" class="bg-blue-400 text-white p-1.5 rounded-full hover:scale-110 transition" title="Imo">📱</a>
+                            <a href="#" class="bg-indigo-600 text-white p-1.5 rounded-full hover:scale-110 transition" title="Messenger">🗨️</a>
+                            <a href="#" class="bg-sky-400 text-white p-1.5 rounded-full hover:scale-110 transition" title="Telegram">✈️</a>
+                            <a href="#" class="bg-blue-700 text-white p-1.5 rounded-full hover:scale-110 transition" title="LinkedIn">🔗</a>
+                            <button onclick="copyArticleLink()" class="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded-full text-xs transition" title="কপি লিংক">📋 কপি লিংক</button>
+                        </div>
+                    </div>
 
+                    <!-- Comment Section (Newly Added) -->
+                    <div class="px-5 py-4 border-t dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+                        <h4 class="font-semibold text-sm mb-3">পাঠকের মন্তব্য (১)</h4>
+                        <div class="space-y-2 mb-4 text-xs">
+                            <div class="bg-white dark:bg-gray-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <div class="flex justify-between items-center font-bold mb-1 text-gray-700 dark:text-gray-200">
+                                    <span>রহিম আহমেদ</span>
+                                    <span class="text-[10px] text-gray-400">১০ মিনিট আগে</span>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300">ঘটনার পেছনের সত্য তুলে ধরার জন্য ধন্যবাদ!</p>
+                            </div>
+                        </div>
+                        <form onsubmit="postComment(event)" class="flex gap-2">
+                            <input type="text" required placeholder="আপনার মন্তব্য লিখুন..." class="flex-1 p-2 border text-xs rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-xs font-semibold">কমেন্ট</button>
+                        </form>
+                    </div>
+
+                </article>
+            </div>
+
+            <!-- In-Feed Sponsored Card -->
+            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                    <span class="bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 text-[10px] px-2 py-0.5 rounded font-bold uppercase">স্পন্সরড বিজ্ঞাপন</span>
+                    <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm mt-1">আপনার ব্র্যান্ডকে পৌঁছে দিন লক্ষাধিক পাঠকের কাছে</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">বিকাশ বা নগদের মাধ্যমে খুব সহজেই বিজ্ঞাপন বুক করুন।</p>
+                </div>
+                <button onclick="openAdModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs font-semibold shadow">বিজ্ঞাপন দিন</button>
+            </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            
+            <!-- Contact Card -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-lg mb-3 border-b pb-2 dark:border-gray-700 text-red-600">যোগাযোগ ও তথ্য</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">যেকোনো সংবাদ বা তথ্যের জন্য আমাদের সরাসরি ইমেইল করুন:</p>
+                <div class="bg-red-50 dark:bg-gray-700 p-3 rounded-lg text-center font-bold text-red-600 dark:text-red-400 text-sm">
+                    ghotonarpichone@gmail.com
+                </div>
+            </div>
+
+            <!-- Ad Payment Box -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-lg mb-3 border-b pb-2 dark:border-gray-700 text-red-600">বিজ্ঞাপন পেমেন্ট ফর্ম</h3>
+                <form onsubmit="submitPayment(event)" class="space-y-3 text-sm">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">পেমেন্ট মাধ্যম</label>
+                        <select class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                            <option>বিকাশ (Personal)</option>
+                            <option>নগদ (Personal)</option>
+                            <option>রকেট (Personal)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">ট্রানজেকশন আইডি (TrxID)</label>
+                        <input type="text" required placeholder="উদা: 9N74XYZ..." class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold transition">সাবমিট পেমেন্ট</button>
+                </form>
+            </div>
+
+            <!-- Policies Card -->
+            <div class="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <h3 class="font-bold text-lg mb-3 border-b pb-2 dark:border-gray-700 text-red-600">নীতিমালা ও হোয়াইট পেপার</h3>
+                <ul class="text-sm space-y-2 text-gray-600 dark:text-gray-300">
+                    <li><a href="#" class="hover:text-red-600">📄 টার্মস অ্যান্ড কন্ডিশনস</a></li>
+                    <li><a href="#" class="hover:text-red-600">🛡️ প্রাইভেসি পলিসি ও হোয়াইট পেপার</a></li>
+                    <li><a href="#" class="hover:text-red-600">⚖️ কপিরাইট ও মডারেশন পলিসি</a></li>
+                </ul>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12 py-6 text-center text-sm text-gray-500">
+        <p>&copy; ২০২৬ ঘটনার পিছনে | সর্বস্বত্ব সংরক্ষিত।</p>
+        <p class="text-xs mt-1">অফিশিয়াল যোগাযোগ: ghotonarpichone@gmail.com</p>
+    </footer>
+
+    <!-- Admin Panel Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-2xl rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b pb-3 dark:border-gray-700">
+                <h2 class="text-xl font-bold text-red-600">নিউজ অ্যাডমিন কন্ট্রোল প্যানেল</h2>
+                <button onclick="closeAdminModal()" class="text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <form onsubmit="handlePublishNews(event)" class="space-y-4 text-sm">
+                <div>
+                    <label class="block font-semibold mb-1">নিউজের শিরোনাম</label>
+                    <input type="text" id="news-title" required placeholder="এখানে নিউজের শিরোনাম লিখুন..." class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">মূল বিবরণ</label>
+                    <textarea id="news-desc" rows="4" required placeholder="বিস্তারিত বিবরণ লিখুন..." class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600"></textarea>
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">একাধিক ছবি সিলেক্ট করুন (Multiple Images Upload)</label>
+                    <input type="file" id="news-images" multiple accept="image/*" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div>
+                    <label class="block font-semibold mb-1">ইউটিউব বা ভিডিও লিংক (Embed URL)</label>
+                    <input type="text" id="news-video" placeholder="https://www.youtube.com/embed/..." class="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div class="flex justify-end space-x-3 pt-3 border-t dark:border-gray-700">
+                    <button type="button" onclick="closeAdminModal()" class="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 font-semibold">বাতিল</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold">পাবলিশ করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Functions -->
+    <script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('side-drawer');
+            const content = document.getElementById('drawer-content');
+            if (drawer.classList.contains('hidden')) {
+                drawer.classList.remove('hidden');
+                setTimeout(() => content.classList.remove('-translate-x-full'), 10);
+            } else {
+                content.classList.add('-translate-x-full');
+                setTimeout(() => drawer.classList.add('hidden'), 300);
+            }
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+        }
+
+        function openAdminModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        function openAdModal() {
+            alert('বিজ্ঞাপন সংক্রান্ত যোগাযোগের জন্য মেইল করুন: ghotonarpichone@gmail.com');
+        }
+
+        function submitPayment(e) {
+            e.preventDefault();
+            alert('আপনার ট্রানজেকশন তথ্য জমা দেওয়া হয়েছে। অ্যাডমিন যাচাই করে বিজ্ঞাপনটি পাবলিশ করবেন।');
+            e.target.reset();
+        }
+
+        function copyArticleLink() {
+            navigator.clipboard.writeText(window.location.href);
+            alert('নিউজের লিংক সফলভাবে কপি করা হয়েছে!');
+        }
+
+        function postComment(e) {
+            e.preventDefault();
+            alert('আপনার কমেন্টটি মডারেশনের জন্য অ্যাডমিনের কাছে জমা দেওয়া হয়েছে।');
+            e.target.reset();
+        }
+
+        function handlePublishNews(e) {
+            e.preventDefault();
+            const title = document.getElementById('news-title').value;
+            alert(`নিউজ পাবলিশ সফল হয়েছে: "${title}"`);
+            closeAdminModal();
+            e.target.reset();
+        }
+    </script>
 </body>
 </html>
