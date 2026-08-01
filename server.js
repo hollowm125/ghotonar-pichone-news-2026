@@ -223,14 +223,17 @@ app.get("/api/news",async(req,res)=>{
   }
 });
 
-app.post("/api/admin/news", async (req, res) => {
+app.post("/api/admin/news", upload.single("image"), async (req, res) => {
   try {
     if (!req.session.user || req.session.user.role !== "admin") {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    const { title, excerpt, content, category_id, image } = req.body;
+    const { title, excerpt, content, category_id } = req.body;
 
+const image = req.file
+  ? `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`
+  : null;
     const result = await pool.query(
       `INSERT INTO news (title, excerpt, content, category_id, image) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
       [title, excerpt, content, category_id || null, image || null]
