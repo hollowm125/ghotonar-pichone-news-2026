@@ -3,6 +3,7 @@ const session = require("express-session");
 const bcrypt = require("bcryptjs");
 const { Pool } = require("pg");
 const path = require("path");
+const multer = require("multer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,8 +21,10 @@ app.use(session({
   resave:false,
   saveUninitialized:false
 }));
+const upload = multer({
+  storage: multer.memoryStorage()
+});
 
-app.use(express.static(path.join(__dirname,"public")));
 
 console.log("PostgreSQL backend started");
 async function initDatabase(){
